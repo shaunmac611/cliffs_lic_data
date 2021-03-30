@@ -31,11 +31,13 @@ def cliffs_climb_scrape():
     roped_data = loop_through_climbs(roped, 'roped')
     boulder_data = loop_through_climbs(boulders, 'boulder')
     climb_data_df = roped_data.append(boulder_data)
-    
+    export_climb_data(climb_data_df)
+
+def export_climb_data(climb_data_df):
     if os.path.isfile(DATA_FILE):
         climb_data_file = pd.read_excel(DATA_FILE, usecols=climb_data_df.columns, dtype={'app_id':str})
         climb_data_file['current_state']=False
-        climb_data_file = add_to_dataframe(climb_data_file, climb_data_df)
+        climb_data_file = append_dataframes(climb_data_file, climb_data_df)
         unique_cols = ['app_id', 'type', 'grade', 'color', 'image', 'first_ascent','num_grade']
         climb_data_file = climb_data_file.drop_duplicates(subset=unique_cols, keep='last')
         climb_data_file.to_excel(DATA_FILE)
@@ -49,7 +51,7 @@ def loop_through_climbs(routes, climb_type):
         if climb_url != False:
             climb_soup = BeautifulSoup(climb_url, 'html.parser')
             climb = Climb(climb_soup, climb_type)
-            route_data = add_to_dataframe(route_data, climb.to_df())
+            route_data = append_dataframes(route_data, climb.to_df())
     return route_data
 
 def is_climb_url(route):
@@ -63,7 +65,7 @@ def is_climb_url(route):
     else:
         return False
 
-def add_to_dataframe(big_df, small_df):
+def append_dataframes(big_df, small_df):
     if big_df.empty:
         big_df = small_df.copy()
     else:

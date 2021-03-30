@@ -7,6 +7,8 @@ Created on Sat Mar 27 20:41:05 2021
 import pandas as pd
 import datetime as dt
 
+"""Dictionaries used to convert climbing grades to an integer representation
+of difficulty"""
 YDS_DICT={'5':1,'5.1':2,'5.2':3,'5.3':4,'5.4':5,
           '5.5':6,'5.6':7,'5.7':8,'5.8':9,'5.9':10,
           '5.10a':11,'5.10b':12,'5.10c':13,'5.10d':14,
@@ -15,17 +17,18 @@ YDS_DICT={'5':1,'5.1':2,'5.2':3,'5.3':4,'5.4':5,
           '5.13a':23,'5.13b':24,'5.13c':25,'5.13d':26,
           '5.14a':27,'5.14b':28,'5.14c':29,'5.14d':30,
           '5.15a':31,'5.15b':32,'5.15c':33,'5.15d':34}
-
 BOULDER_DICT={'VB':12,'V0':13,'V1':14,'V2':15,'V3':16,'V4':17,'V5':18,
               'V6':19,'V7':20,'V8':21,'V9':22,'V10':23,'V11':24,'V12':25,
               'V13':26,'V14':27,'V15':28,'V16':29,'V17':30}
 
+"""Color options at the cliffs"""
 COLORS=['Lime Green','Purple','Yellow','Pink','Grey','Blue','White',
         'Tan','Red','Black']
 
 class Climb:
 
     def __init__(self, climb_soup, climb_type):
+
         self.climb_type = climb_type
         self.grade = climb_soup.find("meta", {"property":"vertical-life:rt_difficulty"})['content']
         self.image = climb_soup.find("meta", {"property":"og:image"})['content']
@@ -38,6 +41,7 @@ class Climb:
         self.date_updated = dt.date.today()
 
     def get_avg_rating(self, climb_soup):
+
         stars = climb_soup.find_all(class_="stat average-rating")
         stars = str(stars).split('class="star" src="')
         avg_stars=0
