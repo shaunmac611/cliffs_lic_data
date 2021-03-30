@@ -6,7 +6,7 @@ Created on Sat Mar 27 19:00:44 2021
 """
 import pandas as pd
 import os
-import urllib
+import urllib.request as url_request
 from urllib.error import HTTPError
 from bs4 import BeautifulSoup
 
@@ -17,7 +17,7 @@ GYM_SITE = "en/indoor/the-cliffs-at-lic/"
 DATA_FILE = 'cliffs_climbs.xlsx'
 
 def cliffs_climb_scrape():
-    webUrl = urllib.request.urlopen(VL_SITE+GYM_SITE)
+    webUrl = url_request.urlopen(VL_SITE+GYM_SITE)
     soup = BeautifulSoup(webUrl, 'html.parser')
     
     count=0
@@ -40,7 +40,7 @@ def export_climb_data(climb_data_df):
         climb_data_file = append_dataframes(climb_data_file, climb_data_df)
         unique_cols = ['app_id', 'type', 'grade', 'color', 'image', 'first_ascent','num_grade']
         climb_data_file = climb_data_file.drop_duplicates(subset=unique_cols, keep='last')
-        climb_data_file.to_excel(DATA_FILE)
+        climb_data_file.to_excel(DATA_FILE, index=False)
     else:
         climb_data_df.to_excel(DATA_FILE)
 
@@ -58,7 +58,7 @@ def is_climb_url(route):
     if 'href=' in str(route):
         climb_url = str(route).split('href=')[1].split('>')[0][1:-1]
         try:
-            climb_url = urllib.request.urlopen(VL_SITE+climb_url)
+            climb_url = url_request.urlopen(VL_SITE+climb_url)
             return climb_url
         except HTTPError:
             return False
