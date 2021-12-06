@@ -16,6 +16,10 @@ from climber import Climber
 VL_SITE = "https://www.vertical-life.info/"
 GYM_SITE = "en/indoor/the-cliffs-at-lic/"
 
+def full_cliffs_scrape():
+    _ = cliffs_climb_scrape()
+    _ = cliffs_climber_scrape()
+    
 def cliffs_climber_scrape():
     user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
     headers={'User-Agent':user_agent,} 
@@ -24,10 +28,10 @@ def cliffs_climber_scrape():
     webUrl = url_request.urlopen(request)
     soup = BeautifulSoup(webUrl, 'html.parser')
     
-    climber_data = loop_through_climbers(soup, headers, constant_export = True, suppress_print=False)
+    climber_data = loop_through_climbers(soup, headers)
     return climber_data
 
-def loop_through_climbers(soup, headers, constant_export = True, suppress_print=True):
+def loop_through_climbers(soup, headers, constant_export = True, suppress_print=False):
     climber_data = pd.DataFrame()
     count=0
     for link in soup.find_all('a'):
@@ -55,6 +59,7 @@ def loop_through_climbers(soup, headers, constant_export = True, suppress_print=
                         continue
     return climber_data
 
+
 def cliffs_climb_scrape():
     user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
     headers={'User-Agent':user_agent,} 
@@ -75,6 +80,7 @@ def cliffs_climb_scrape():
     boulder_data = loop_through_climbs(boulders, 'boulder')
     climb_data_df = roped_data.append(boulder_data)
     export_climb_data(climb_data_df)
+    return climb_data_df
 
 def export_climb_data(climb_data_df):
     if os.path.isfile('cliffs_climbs.xlsx'):

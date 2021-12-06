@@ -18,6 +18,10 @@ YDS_DICT={"N/A":"N/A",'3-4':0,'5':1,'5.0':1,'5.1':2,'5.2':3,'5.3':4,'5.4':5,
           '5.14a':27,'5.14b':28,'5.14c':29,'5.14d':30,
           '5.15a':31,'5.15b':32,'5.15c':33,'5.15d':34}
 
+BOULDER_DICT={"N/A":"N/A",'VB':12,'V0':13,'V1':14,'V2':15,'V3':16,'V4':17,'V5':18,
+              'V6':19,'V7':20,'V8':21,'V9':22,'V10':23,'V11':24,'V12':25,
+              'V13':26,'V14':27,'V15':28,'V16':29,'V17':30}
+
 FRENCH_2_YDS={"N/A":"N/A","1":"5.0","2":"5.1","3":"5.2","3+":"5.3","4":"5.4","4a":"5.4","4b":"5.5",
               "4c":"5.6","5a":"5.7","5b":"5.8","5c":"5.9",
               "6a":"5.10a","6a+":"5.10b","6b":"5.10c","6b+":"5.10d",
@@ -26,10 +30,6 @@ FRENCH_2_YDS={"N/A":"N/A","1":"5.0","2":"5.1","3":"5.2","3+":"5.3","4":"5.4","4a
               "7c+":"5.13a","8a":"5.13b","8a+":"5.13c","8b":"5.13d",
               "8b+":"5.14a","8c":"5.14b","8c+":"5.14c","9a":"5.14d",
               "9a+":"5.15a","9b":"5.15b","9b+":"5.15c","9c":"5.15d"}
-
-BOULDER_DICT={"N/A":"N/A",'VB':12,'V0':13,'V1':14,'V2':15,'V3':16,'V4':17,'V5':18,
-              'V6':19,'V7':20,'V8':21,'V9':22,'V10':23,'V11':24,'V12':25,
-              'V13':26,'V14':27,'V15':28,'V16':29,'V17':30}
 
 FRENCH_2_HUECO={"N/A":"N/A","3":"V0-","4-":"V0","4":"V0","4+":"V1","5-":"V1",
                 "5":"V1","5+":"V2","6A":"V3","6A+":"V3","6B":"V4","6B+":"V4",
@@ -47,10 +47,15 @@ CLASS_NAMES_DEFAULT = {'zlags':0, 'meters climbed':0, 'total points':0,
 
 class Climber:
 
-    def __init__(self, climber_soup):
+    def __init__(self, climber_soup, gym=None):
         self.soup = climber_soup
         self.name = self.soup.find("title").get_text()[:-1*len(' vertical-life profile')]
-        self.app_id = 'temp'#self.soup.find("meta", {"name":"al:ios:url"})['content']
+        self.app_id = self.soup.find("meta", {"property":"al:ios:url"})['content'].split('/')[-1]
+        self.init_core_info()
+        self.sends = self.get_sends()
+        self.get_top_data(top=10)
+    
+    def init_core_info(self):
         class_values = [div_class.get_text() for div_class in self.soup.find_all("div", {"class": "value"})][2:]
         class_names = [div_class.get_text() for div_class in self.soup.find_all("div", {"class": "name"})]
         climber_info = {class_names[i]: class_values[i] for i in range(len(class_names))}
@@ -61,60 +66,21 @@ class Climber:
         self.zlags = int(all_class_names['zlags'].replace(" ",""))
         self.meters_climbed = int(all_class_names['meters climbed'].replace(" ",""))
         self.total_points = int(all_class_names['total points'].replace(" ",""))
-        
-        route_data, top_routes, top_boulders = self.get_top_sends()
-        self.route_data = route_data
-        self.top_routes = top_routes
-        self.top_boulders = top_boulders
-        
-        if not top_routes.empty:
-            self.best_lead_grade = top_routes['grade'].iloc[0]
-            if len(top_routes['grade'])>=3:
-                self.third_best_lead_grade = top_routes['grade'].iloc[2]
-            else:
-                self.third_best_lead_grade = top_routes['grade'].iloc[-1]
-            self.top_ten_avg_lead_grade = list(YDS_DICT.keys())[list(YDS_DICT.values()).index(round(top_routes['difficulty'].mean()))]
-        else:
-            self.best_lead_grade = "N/A"
-            self.third_best_lead_grade = "N/A"
-            self.top_ten_avg_lead_grade = "N/A"
-        if not top_boulders.empty:
-            self.best_boulder_grade = top_boulders['grade'].iloc[0]
-            if len(top_boulders['grade'])>=3:
-                self.third_best_boulder_grade = top_boulders['grade'].iloc[2]
-            else:
-                self.third_best_boulder_grade = top_boulders['grade'].iloc[-1]
-            self.top_ten_avg_boulder_grade = list(BOULDER_DICT.keys())[list(BOULDER_DICT.values()).index(round(top_boulders['difficulty'].mean()))]
-        else:
-            self.best_boulder_grade = "N/A"
-            self.third_best_boulder_grade = "N/A"
-            self.top_ten_avg_boulder_grade = "N/A"
-        
+    
     def to_df(self):
         d = {'app_id':[self.app_id],
              'name':[self.name],
              'zlags':[self.zlags],
              'meters_climbed':[self.meters_climbed],
              'total_points':[self.total_points],
-             
              'best_lead_grade':[self.best_lead_grade],
              'best_boulder_grade':[self.best_boulder_grade],
-             'best_lead_grade_num':YDS_DICT[self.best_lead_grade],
-             'best_boulder_grade_num':BOULDER_DICT[self.best_boulder_grade],
-             
-             'third_best_lead_grade':[self.third_best_lead_grade],
-             'third_best_boulder_grade':[self.third_best_boulder_grade],
-             'third_best_lead_grade_num':YDS_DICT[self.third_best_lead_grade],
-             'third_best_boulder_grade_num':BOULDER_DICT[self.third_best_boulder_grade],
-             
              'top_ten_avg_lead_grade':[self.top_ten_avg_lead_grade],
              'top_ten_avg_boulder_grade':[self.top_ten_avg_boulder_grade],
-             'top_ten_avg_lead_grade_num':YDS_DICT[self.top_ten_avg_lead_grade],
-             'top_ten_avg_boulder_grade_num':BOULDER_DICT[self.top_ten_avg_boulder_grade]
              }
         return pd.DataFrame(d)
     
-    def get_top_sends(self, count=10):
+    def get_sends(self):
         climbs = self.soup.find_all(class_="route")
         columns = ['color', 'grade', 'difficulty', 'route_type', 'location']
         route_data = pd.DataFrame(columns = columns)
@@ -131,13 +97,28 @@ class Climber:
                 route_type = 'boulder'
                 difficulty = BOULDER_DICT[grade]
             route_data = append_dataframes(route_data, pd.DataFrame([[color,grade,difficulty,route_type,location]], columns=columns))
-        top_routes = route_data.loc[route_data['route_type']=='roped'].sort_values(by='difficulty', axis=0, ascending=False)[:count]
-        top_boulders = route_data.loc[route_data['route_type']=='boulder'].sort_values(by='difficulty', axis=0, ascending=False)[:count]
+        return route_data
+
+    def get_top_data(self, top=10):
+        top_routes = self.sends.loc[self.sends['route_type']=='roped'].sort_values(by='difficulty', axis=0, ascending=False)[:top].reset_index()
+        top_boulders = self.sends.loc[self.sends['route_type']=='boulder'].sort_values(by='difficulty', axis=0, ascending=False)[:top].reset_index()
         
-        return route_data, top_routes.reset_index(), top_boulders.reset_index()
+        if not top_routes.empty:
+            self.best_lead_grade = top_routes['grade'].iloc[0]
+            self.top_ten_avg_lead_grade = list(YDS_DICT.keys())[list(YDS_DICT.values()).index(round(top_routes['difficulty'].mean()))]
+        else:
+            self.best_lead_grade = "N/A"
+            self.top_ten_avg_lead_grade = "N/A"
+        if not top_boulders.empty:
+            self.best_boulder_grade = top_boulders['grade'].iloc[0]
+            self.top_ten_avg_boulder_grade = list(BOULDER_DICT.keys())[list(BOULDER_DICT.values()).index(round(top_boulders['difficulty'].mean()))]
+        else:
+            self.best_boulder_grade = "N/A"
+            self.top_ten_avg_boulder_grade = "N/A"
 
     def to_string(self):
-        return self.name + ': Best Lead:' + self.best_lead_grade + '  |  Best Boulder ' + self.best_boulder_grade
+        return self.name + ': Climbs:' + self.top_ten_avg_lead_grade + "/" + self.top_ten_avg_boulder_grade\
+               + ". Has sent " + self.best_lead_grade + "/" + self.best_boulder_grade
 
 def append_dataframes(big_df, small_df):
     if big_df.empty:
