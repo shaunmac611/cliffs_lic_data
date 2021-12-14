@@ -10,13 +10,12 @@ import helper
 from climb import VL_Climb
 from climber import VL_Climber
 
+VL_SITE = "https://www.vertical-life.info/"
+GYM_SITE = "en/indoor/the-cliffs-at-lic/"
+
 def full_cliffs_scrape():
-    climb_data_df = cliffs_climb_scrape("https://www.vertical-life.info",
-                                        "/en/indoor/the-cliffs-at-lic/")
-    climb_data_df.to_excel('cliffs_climbs.xlsx')
-    
-    _ = cliffs_climber_scrape("https://www.vertical-life.info",
-                              "/en/indoor/the-cliffs-at-lic/")
+    _ = cliffs_climb_scrape()
+    _ = cliffs_climber_scrape()
 
 """Pull Climb Data"""
 def cliffs_climb_scrape(core_site, area_site):

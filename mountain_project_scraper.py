@@ -18,7 +18,7 @@ location_dict = {'Red River Gorge':'105841134', 'New River Gorge':'105855991',
                  'Joshua Tree':'105720495', 'Eldorado Canyon':'105744246', 'Rumney':'105867829',
                  'Red Rocks':'105731932'}
 def test_main():
-    for location in ['Boulder Canyon', 'Red Rocks', 'Rumney', 'Eldorado Canyon', 'Yosemite']:
+    for location in ['Red Rocks', 'Rumney', 'Eldorado Canyon', 'Yosemite']:
         location_code = location_dict[location]
         print('Pulling Data for: ' + location)
         climb_data, climber_data = loop_through_areas(location_code, location)
